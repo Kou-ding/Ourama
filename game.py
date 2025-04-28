@@ -130,7 +130,6 @@ class Game:
             self.playerTurn(player)
             # Check if the monster is defeated
             if self.monsterDefeated:
-                print("You have defeated the monster!")
                 return
             
         # Monster's turn
@@ -142,7 +141,7 @@ class Game:
             self.monsterTurn(player)
 
     def playEncounter(self, monster):
-        print("You have encountered a monster!")
+        print(f"You have encountered {monster.name}!")
         self.current_monster = monster
         print(self.current_monster.__str__())
         while True:
@@ -160,6 +159,8 @@ class Game:
         # Experience all encounters
         for i in range(len(self.monsters)):
             self.playEncounter(self.monsters[i])
+        
+        # If all encounters have played out
         print("You Win! All monsters have been defeated.")
             
             
