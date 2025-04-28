@@ -20,6 +20,8 @@ class Monster:
             self.shield = 0
         else:
             self.health -= damage
+        if self.health < 0:
+            self.health = 0
 
     # Monster deal damage
     def do_damage(self, damage, Player):
