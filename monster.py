@@ -6,18 +6,19 @@ class Monster:
         self.shield = shield
         self.health_regen = health_regen
         self.health = max_health
+        self.current_shield = 0
     
     def __str__(self):
-        return f"{self.name} - Health: {self.health}/{self.max_health} - Attack: {self.attack} - Shield: {self.shield} - Health Regen: {self.health_regen}"
+        return f"{self.name} - Health: {self.health}/{self.max_health} - Attack: {self.attack} - Shield: {self.shield} - Current Shield: {self.current_shield} - Health Regen: {self.health_regen}"
 
     # Monster receive damage
     def take_damage(self, damage):
-        if self.shield > damage:
-            self.shield -= damage
-        elif self.shield < damage:
+        if self.current_shield > damage:
+            self.current_shield -= damage
+        elif self.current_shield < damage:
             damage -= self.shield
             self.health -= damage
-            self.shield = 0
+            self.current_shield = 0
         else:
             self.health -= damage
         if self.health < 0:
@@ -36,9 +37,14 @@ class Monster:
         if Player.health < 0:
             Player.health = 0
     
+    # Monster gain shield
+    def gain_shield(self):
+        self.current_shield += self.shield
+        
     # Monster health Regeneration 
     def heal(self):
         self.health += self.health_regen
     
+    # Monster check if alive
     def is_alive(self):
         return self.health > 0
