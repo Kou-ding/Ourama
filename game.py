@@ -62,11 +62,35 @@ class Game:
 
         # Initialize 3 Monsters
         self.monsters = [None] * 3
-        # name, max_health, attack, shield, health_regen, current_shield
+        # name, max_health, attack, shield, health_regen, current_shield, intention[will attack?, will gain shield?], Attack probability, Shield probability
         # Scale monster stats based on number of players
-        self.monsters[0] = Monster("Rekanos", len(self.players)*5000, len(self.players)*1000/2,  len(self.players)*1000/1.5, 0, 0) 
-        self.monsters[1] = Monster("Gorgon", len(self.players)*8000, len(self.players)*2000/2,  len(self.players)*3000/1.5, len(self.players)*500/1.5, 0) 
-        self.monsters[2] = Monster("Golem", len(self.players)*10000, len(self.players)*2500/2,  len(self.players)*5000/1.5, len(self.players)*1000/1.5, 0)
+        self.monsters[0] = Monster(
+            name="Rekanos", 
+            max_health=int(len(self.players)*5000), 
+            attack=int(len(self.players)*1000/2), 
+            shield=int(len(self.players)*1000/1.5), 
+            health_regen=0, 
+            intention=[0,0,0],
+            attack_probability=5, 
+            shield_probability=5) 
+        self.monsters[1] = Monster(
+            name="Gorgon", 
+            max_health=int(len(self.players)*8000), 
+            attack=int(len(self.players)*2000/2),
+            shield=int(len(self.players)*3000/1.5), 
+            health_regen=int(len(self.players)*500/1.5), 
+            intention=[0,0,0], 
+            attack_probability=6, 
+            shield_probability=6) 
+        self.monsters[2] = Monster(
+            name="Golem", 
+            max_health=int(len(self.players)*10000), 
+            attack=int(len(self.players)*2500/2),  
+            shield=int(len(self.players)*5000/1.5), 
+            health_regen=int(len(self.players)*1000/1.5),  
+            intention=[0,0,0], 
+            attack_probability=4, 
+            shield_probability=6)
 
         # View the players and monsters stats
         for i in range(len(self.players)):
@@ -75,7 +99,7 @@ class Game:
         for i in range(len(self.monsters)):
             print(self.monsters[i].__str__())
 
-        print("Players and Monsters have been initialized!")
+        print("Players and Monsters have been initialized!\n")
 
 
     def playerTurn(self, player):
@@ -92,51 +116,21 @@ class Game:
             
             card_id = int(card_id)
             player.playCard(cards[card_id], self.current_monster, self.players)
-            print(player.__str__())
-            print(self.current_monster.__str__())
             self.checkMonsterVitals()
-            
 
     def monsterTurn(self):
-        print(f"{self.current_monster.name}'s turn")
-        # Generate random number from 1 to 10
-        randomizer = random.randint(1, 10)
-        if self.current_monster.name == "Rekanos":
-            # Even chance to attack or gain shield
-            if randomizer <= 5:
-                self.current_monster.gain_shield()
-                print(f"{self.current_monster.name} gained shield!")
-            if randomizer > 5:
-                # Attack a random player
-                player = random.choice(self.players)
-                self.current_monster.do_damage(self.current_monster.attack, player)
-                print(f"{self.current_monster.name} attacked Player {player.id}")
+        print(f"\n{self.current_monster.name}'s turn")
 
-        elif self.current_monster.name == "Gorgon":
-            # Most likely to attack
-            if randomizer > 6:
-                # Gain shield
-                self.current_monster.gain_shield()
-                print(f"{self.current_monster.name} gained shield!")
-            if randomizer <= 6:
-                # Attack a random player
-                player = random.choice(self.players)
-                self.current_monster.do_damage(self.current_monster.attack, player)
-                print(f"{self.current_monster.name} attacked Player {player.id}")
-            self.current_monster.heal()
-
-        elif self.current_monster.name == "Golem":
-            # Both attacks and gains shield
-            if randomizer <= 5:
-                # Gain shield
-                self.current_monster.gain_shield()
-                print(f"{self.current_monster.name} gained shield!")
-            if randomizer > 3:
-                # Attack a random player
-                player = random.choice(self.players)
-                self.current_monster.do_damage(self.current_monster.attack, player)
-                print(f"{self.current_monster.name} attacked Player {player.id}")
-            self.current_monster.heal()
+        if self.current_monster.intention[0] == 1:
+            # Attack a random player
+            self.current_monster.do_damage(self.current_monster.attack, self.players[self.current_monster.intention[1]-1])
+            print(f"{self.current_monster.name} attacked Player {self.players[self.current_monster.intention[1]-1].id} for {self.current_monster.attack} damage!")
+        if self.current_monster.intention[2] == 1:
+            # Gain shield
+            self.current_monster.gain_shield()
+            print(f"{self.current_monster.name} gained {self.current_monster.shield} shield!")
+        self.current_monster.heal()
+        
         # Check if any player is alive
         self.checkTeamVitals()
         
@@ -159,8 +153,13 @@ class Game:
         
     
     def playRound(self):
+        # Print the current round
         self.current_round += 1
         print(f"Round {self.current_round}")
+
+        # Print the monster's intention
+        self.current_monster.show_intention(len(self.players))
+        
         # Players' turn
         for player in self.players:
             # Check if the player is alive
@@ -168,7 +167,7 @@ class Game:
                 print(f"Player {player.id} has been defeated and cannot play.")
                 continue
             # Player's turn
-            print(f"Player {player.id} draw 2 cards from your deck.")
+            print(f"\nPlayer {player.id} draw 2 cards from your deck.")
             self.playerTurn(player)
             # Check if the monster is defeated
             if self.monsterDefeated:
@@ -180,9 +179,15 @@ class Game:
         for player in self.players:
             # Check if the player is alive
             if not player.is_alive():
-                print(f"Player {player.id} has been defeated and cannot play.")
+                print(f"Player {player.id} has been slain by {self.current_monster.name}.")
                 continue
-            
+        # Debugging print all players
+        print("\n################ Game State #################") # empty line for spacing
+        for player in self.players:
+            print(player.__str__())
+        # Debugging print the monster
+        print(self.current_monster.__str__())
+        print("#############################################\n") # empty line for spacing
 
     def playEncounter(self, monster):
         print(f"You have encountered {monster.name}!")
@@ -206,7 +211,7 @@ class Game:
             self.playEncounter(self.monsters[i])
             # Prompt the players to choose 1 of 3 cards
             if i != len(self.monsters) - 1:
-                print("Draw 3 new cards and choose one to add to your deck.")
+                print("\nDraw 3 new cards and choose one to add to your deck.")
 
         # If all encounters have played out
         print("You Win! All monsters have been defeated.")
