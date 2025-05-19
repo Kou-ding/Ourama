@@ -1,4 +1,4 @@
-Test# Ourama (王ラマ)
+# Ourama (王ラマ)
 A hybrid digital/physical Roguelike, RPG, Deckbuilder, Co-op game that livens up its boardgame basis by making it interactive and adding graphics to the mix.
 
 ## Tutorial
