@@ -16,50 +16,7 @@ class Game:
 
 
     def initPlayersMonsters(self):
-        print("Welcome to Ourama!")
-
-        print("How many players are there?")
-        # Enter a valid number
-        while True:
-            try:
-                num_players = int(input("Enter the number of players (1-4): "))
-                if 1 <= num_players <= 4:
-                    self.players = [None] * num_players
-                    break
-                else:
-                    print("Invalid number of players. Please enter a number between 1 and 4.")
-            except ValueError:
-                print("Invalid input. Please enter a number.")
-
-        print("Classes:")
-        print("1. Knight")
-        print("2. Assassin")
-        print("3. Healer")
-        print("4. Tank")
- 
-        for i in range(num_players):
-            while True:
-                try:
-                    choice = input(f"Player {i+1}: Choose your class (1-4): ")
-                    choice = int(choice)
-                    if choice == 1:
-                        self.players[i] = Knight(i+1)
-                        break
-                    elif choice == 2:
-                        self.players[i] = Assassin(i+1)
-                        break
-                    elif choice == 3:
-                        self.players[i] = Healer(i+1)
-                        break
-                    elif choice == 4:
-                        self.players[i] = Tank(i+1)
-                        break
-                    else:
-                        print("Invalid choice. Please choose a valid class.")
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
-                    continue
-
+       
         # Initialize 3 Monsters
         self.monsters = [None] * 3
         # name, max_health, attack, shield, health_regen, current_shield, intention[will attack?, will gain shield?], Attack probability, Shield probability

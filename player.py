@@ -28,53 +28,47 @@ class Player:
         self.max_health += max_health
         self.health = min(self.health, self.max_health)
 
-    def playCard(self, Card, Monster, players):
-        if self.energy >= Card.energy:
-            self.energy -= Card.energy
-            if Card.attack > 0:
-                Monster.take_damage(Card.attack)
-                print(f"Player {self.id} played {Card.name}!")
-                print(f"Player {self.id} attacked {Monster.name} for {Card.attack} damage!")
-            if Card.shield > 0:
-                self.gain_shield(Card.shield)
-                print(f"Player {self.id} played {Card.name}!")
-                print(f"Player {self.id} gained {Card.shield} shield!")
-            if Card.heal > 0:
-                # Check if the player is a healer
-                if self.player_class != "Healer":
-                    print(f"Player {self.id} is not a healer and cannot heal!")
-                    # Unspend the energy
-                    self.energy += Card.energy
-                    return
-                while True:
-                    try:
-                        healRecipient = input(f"Which player are you going to heal:")
-                        for i, player in enumerate(players):
-                            print(f"{i + 1}. {player.id}")
-                        # Convert input to integer
-                        healRecipient = int(healRecipient)
-                        if healRecipient > 0 and healRecipient <= len(players):
-                            self.heal(Card.heal, players[healRecipient - 1])
-                            print(f"Player {self.id} played {Card.name}!")
-                            print(f"Player {self.id} healed Player {players[healRecipient - 1].id} for {Card.heal} health!")
-                            break
-                        else:
-                            print("Invalid choice. Please choose a valid player.")
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-                        continue
-                
-            if Card.add_energy > 0:
-                self.gain_energy(Card.add_energy)
-                print(f"Player {self.id} played {Card.name}!")
-                print(f"Player {self.id} gained {Card.add_energy} energy!")
-            if Card.add_max_health > 0:
-                self.increase_max_health(Card.add_max_health)
-                print(f"Player {self.id} played {Card.name}!")
-                print(f"Player {self.id} increased max health by {Card.add_max_health}!")
-        else:
+    def playCard(self, Card, Monster, players, target=None):
+        if self.energy < Card.energy:
             print(f"Player {self.id} does not have enough energy to play {Card.name}!")
             return
+
+        self.energy -= Card.energy
+
+        if Card.attack > 0:
+            Monster.take_damage(Card.attack)
+            print(f"Player {self.id} played {Card.name}!")
+            print(f"Player {self.id} attacked {Monster.name} for {Card.attack} damage!")
+
+        if Card.shield > 0:
+            self.gain_shield(Card.shield)
+            print(f"Player {self.id} played {Card.name}!")
+            print(f"Player {self.id} gained {Card.shield} shield!")
+
+        if Card.heal > 0:
+            if self.player_class != "Healer":
+                print(f"Player {self.id} is not a healer and cannot heal!")
+                self.energy += Card.energy  # Refund energy
+                return
+            if target and target.is_alive():
+                self.heal(Card.heal, target)
+                print(f"Player {self.id} played {Card.name}!")
+                print(f"Player {self.id} healed Player {target.id} for {Card.heal} health!")
+            else:
+                print("No valid target selected for healing.")
+                self.energy += Card.energy  # Refund energy
+                return
+
+        if Card.add_energy > 0:
+            self.gain_energy(Card.add_energy)
+            print(f"Player {self.id} played {Card.name}!")
+            print(f"Player {self.id} gained {Card.add_energy} energy!")
+
+        if Card.add_max_health > 0:
+            self.increase_max_health(Card.add_max_health)
+            print(f"Player {self.id} played {Card.name}!")
+            print(f"Player {self.id} increased max health by {Card.add_max_health}!")
+            
     def is_alive(self):
         return self.health > 0
 
