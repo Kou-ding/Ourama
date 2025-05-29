@@ -1,15 +1,22 @@
 from card import Card
 from monster import Monster
+from arduino import Arduino
+import time
 class Player:
     def __init__(self, id, player_class, max_health, max_energy):
         self.id = id
+        self.name = ""
         self.player_class = player_class
         self.max_health = max_health
         self.max_energy = max_energy
         self.health = max_health
         self.energy = max_energy
         self.shield = 0
+        
     
+    def setnametoid(self, name):
+        self.name = name
+     
     def __str__(self):
         return f"Player {self.id} - Class: {self.player_class} - Health: {self.health}/{self.max_health} - Energy: {self.energy}/{self.max_energy} - Shield: {self.shield}" 
 
@@ -46,23 +53,54 @@ class Player:
                     # Unspend the energy
                     self.energy += Card.energy
                     return
-                while True:
-                    try:
-                        healRecipient = input(f"Which player are you going to heal:")
-                        for i, player in enumerate(players):
-                            print(f"{i + 1}. {player.id}")
-                        # Convert input to integer
-                        healRecipient = int(healRecipient)
-                        if healRecipient > 0 and healRecipient <= len(players):
-                            self.heal(Card.heal, players[healRecipient - 1])
+                
+                scroll = []
+                for i in range(len(players)):
+                    scroll.append(f"{players[i].id} who is {players[i].player_class}") 
+                print("Press left and right to scroll through players.\nPress the button to select who you want to save")
+                index = 0
+                arduino = Arduino()
+                arduino.connect()
+                
+                if arduino.isconnected():
+                
+                    while True:
+                        time.sleep(0.5)
+                        wholemsg=arduino.readmsg()
+                        msg= arduino.decode(wholemsg)
+                        
+                        print(scroll[0])
+                        if msg == "RIGHT":
+                            index = (index + 1)% len(scroll)
+                            print(scroll[index]) 
+                        elif msg == "LEFT":
+                            index = (index - 1)% len(scroll)
+                            print(scroll[index])
+                        elif msg == "BTN":
+                            selected_class = scroll[index]
+                              
+                            print(f"Player {self.id} selected {selected_class}!")
+                            self.heal(Card.heal,players[index])
                             print(f"Player {self.id} played {Card.name}!")
-                            print(f"Player {self.id} healed Player {players[healRecipient - 1].id} for {Card.heal} health!")
+                            print(f"Player {self.id} healed Player {players[index].id} for {Card.heal} health!")
                             break
-                        else:
-                            print("Invalid choice. Please choose a valid player.")
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-                        continue
+                        
+                    # try:
+                    #     healRecipient = input(f"Which player are you going to heal:")
+                    #     for i, player in enumerate(players):
+                    #         print(f"{i + 1}. {player.id}")
+                    #     # Convert input to integer
+                    #     healRecipient = int(healRecipient)
+                    #     if healRecipient > 0 and healRecipient <= len(players):
+                    #         self.heal(Card.heal, players[healRecipient - 1])
+                    #         print(f"Player {self.id} played {Card.name}!")
+                    #         print(f"Player {self.id} healed Player {players[healRecipient - 1].id} for {Card.heal} health!")
+                    #         break
+                    #     else:
+                    #         print("Invalid choice. Please choose a valid player.")
+                    # except ValueError:
+                    #     print("Invalid input. Please enter a number.")
+                    #     continue
                 
             if Card.add_energy > 0:
                 self.gain_energy(Card.add_energy)
