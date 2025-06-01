@@ -130,7 +130,16 @@ class CharacterClass:
         self.class_selected = False
         self.phase = 0  # 0 = selection, 1 = show stats, 2 = show message, 3 = move to next state
         self.frame_counter = 0
-       
+        self.KnightIcon=pygame.image.load("Knight.png")
+        self.TankIcon=pygame.image.load("Tank.png")
+        self.HealerIcon=pygame.image.load("Healer.png")
+        self.AssassinIcon=pygame.image.load("Assasin.png")
+        self.class_icons = {
+            "Knight": self.KnightIcon,
+            "Tank": self.TankIcon,
+            "Healer": self.HealerIcon,
+            "Assassin": self.AssassinIcon
+              }
 
     def run(self, events):
         self.display.fill((0, 0, 0))  # Clear the screen
@@ -153,6 +162,7 @@ class CharacterClass:
                         if player_obj:
                             self.players.append(player_obj)
                             self.current_player += 1
+                            
 
             if self.current_player > self.max_players:
                 done_text = self.font.render("All players selected!", True, (0, 255, 0))
@@ -171,31 +181,53 @@ class CharacterClass:
             section_width = screen_width // 2
             section_height = screen_height // 2
 
+        
             for i, player in enumerate(self.players):
-                if i == 0:
-                    x, y = 20, 20
-                elif i == 1:
-                    x, y = section_width + 20, 20
-                elif i == 2:
-                    x, y = 20, section_height + 20
-                elif i == 3:
-                    x, y = section_width + 20, section_height + 20
+             if i == 0:
+                 origin_x, origin_y = 0, 0
+             elif i == 1:
+                 origin_x, origin_y = section_width, 0
+             elif i == 2:
+                 origin_x, origin_y = 0, section_height
+             elif i == 3:
+                 origin_x, origin_y = section_width, section_height
 
-                text_surface = self.font.render(player.__class__.__name__, True, (255, 255, 255))
-                self.display.blit(text_surface, (x, y))
-                energy_surface = self.fontsmall.render(f"Max Energy: {player.max_energy}", True, (255, 255, 255))
-                self.display.blit(energy_surface, (x, y + 30))
-                health_surface = self.fontsmall.render(f"Max Health: {player.max_health}", True, (255, 255, 255))
-                self.display.blit(health_surface, (x, y + 50))
+             center_x = origin_x + section_width // 2
+             center_y = origin_y + section_height // 2
 
-                class_color = (100, 100, 100)
-                if player.player_class == "Knight":
-                    class_color = (255, 0, 0)
-                elif player.player_class == "Tank":
-                    class_color = (0, 255, 0)
-                elif player.player_class == "Healer":
-                    class_color = (0, 0, 255)
-                pygame.draw.rect(self.display, class_color, (x, y + 80, 100, 20))
+             # Draw class icon
+             icon = self.class_icons.get(player.player_class)
+             if icon:
+                 icon_rect = icon.get_rect(center=(center_x, center_y - 40))  # icon slightly above center
+                 self.display.blit(icon, icon_rect)
+
+             # Draw class name
+             text_surface = self.font.render(player.__class__.__name__, True, (255, 255, 255))
+             text_rect = text_surface.get_rect(center=(center_x, center_y + 40))
+             self.display.blit(text_surface, text_rect)
+
+             # Draw max energy
+             energy_surface = self.fontsmall.render(f"Max Energy: {player.max_energy}", True, (255, 255, 255))
+             energy_rect = energy_surface.get_rect(center=(center_x, center_y + 65))
+             self.display.blit(energy_surface, energy_rect)
+
+             # Draw max health
+             health_surface = self.fontsmall.render(f"Max Health: {player.max_health}", True, (255, 255, 255))
+             health_rect = health_surface.get_rect(center=(center_x, center_y + 85))
+             self.display.blit(health_surface, health_rect)
+
+             # Class color bar
+             class_color = (100, 100, 100)
+             if player.player_class == "Knight":
+                 class_color = (255, 0, 0)
+             elif player.player_class == "Tank":
+                 class_color = (0, 255, 0)
+             elif player.player_class == "Healer":
+                 class_color = (0, 0, 255)
+             elif player.player_class == "Assassin":
+                 class_color = (255, 255, 0)
+
+             pygame.draw.rect(self.display, class_color, (center_x - 50, center_y + 105, 100, 10))
 
             self.frame_counter += 1
             if self.frame_counter > 600:  # 10 seconds
@@ -235,8 +267,27 @@ class FirstLevel:
         self.victory_screen = False
         self.defeat_screen = False
         self.screen_timer = 0 
-        self.defeatscreen=pygame.image.load("defeat.jpg")
+        self.defeatscreen=pygame.image.load("defeat.png")
         self.victoryscreen=pygame.image.load("victory.jpg")
+        self.arrow_image = pygame.image.load("arrow.png").convert_alpha()
+        self.healthbar=pygame.image.load("healthbar.png")
+        self.energyicon=pygame.image.load("energyicon.png")
+        self.healingicon=pygame.image.load("healingicon.png").convert_alpha()
+      # self.armouricon=pygame.image.load("armouricon.png")
+        self.swordicon=pygame.image.load("swordicon.png").convert_alpha()
+        self.shieldicon=pygame.image.load("shieldicon.png").convert_alpha()
+        self.KnightIcon=pygame.image.load("Knight.png")
+        self.TankIcon=pygame.image.load("Tank.png")
+        self.HealerIcon=pygame.image.load("Healer.png")
+        self.AssassinIcon=pygame.image.load("Assasin.png")
+        self.class_icons = {
+            "Knight": self.KnightIcon,
+            "Tank": self.TankIcon,
+            "Healer": self.HealerIcon,
+            "Assassin": self.AssassinIcon
+              }
+        self.heal_target_index = 0
+
 
         # Initialize monster (first boss)
         player_count = len(self.players)
@@ -259,18 +310,6 @@ class FirstLevel:
        #     player.energy=player.max_energy
        #     player.shield=0
        # #intetions of monster for the players
-
-    #colour for each class
-    def get_class_color(self, player):
-     if player.player_class == "Knight":
-        return (255, 0, 0)  # Red
-     elif player.player_class == "Tank":
-        return (0, 255, 0)  # Green
-     elif player.player_class == "Healer":
-        return (0, 0, 255)  # Blue
-     elif player.player_class == "Assassin":
-        return (255, 255, 0)  # Yellow
-     return (100, 100, 100)  # Default gray
 
      #Check;s if monster is defeated
     def check_monster_vitals(self):
@@ -295,20 +334,40 @@ class FirstLevel:
 
      #defeat screen
     def draw_defeat_screen(self):
-     self.display.blit(self.defeatscreen, (0, 0))   
+     self.display.fill((0,0,0))
+     self.display.blit(self.defeatscreen, (100,150))   
      
     #for monster
     def draw_health_bar(self):
-        bar_width=200
-        bar_height=20
-        health_ratio =self.boss.health/self.boss.max_health #ousiastika poso posostiaia peftei to hp
-        pygame.draw.rect(self.display,(255,0,0),(self.boss_rect.x,self.boss_rect.y-30,bar_width,bar_height))
-        pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
-        boss_name=self.font.render(self.boss.name,True,(255,255,255))
-        self.display.blit(boss_name,(self.boss_rect.x,self.boss_rect.y-55))
-        intention_text = self.font.render(f"Intentions: {self.boss.intention}", True, (255, 255, 0))
-        self.display.blit(intention_text, (self.boss_rect.x, self.boss_rect.y + 160))
-
+     bar_width = 200
+     bar_height = 20
+     health_ratio = self.boss.health / self.boss.max_health
+ 
+     # Health bar
+     pygame.draw.rect(self.display, (255, 0, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width, bar_height))
+     pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
+ 
+     # Boss name
+     boss_name = self.font.render(self.boss.name, True, (255, 255, 255))
+     self.display.blit(boss_name, (self.boss_rect.x, self.boss_rect.y - 55))
+ 
+     # Intention icons [attack, shield, heal]{enumerate the intentions (making a vocabulary)}
+     icon_map = {0: self.swordicon, 2: self.shieldicon, 3: self.healingicon}
+     icon_size = 40
+     icon_spacing = 5
+ 
+     # Count how many active intentions to center them
+     active_intentions = [i for i in (0, 2, 3) if i < len(self.boss.intention) and self.boss.intention[i] == 1]
+     active_count = len(active_intentions)
+     start_x = self.boss_rect.x + (self.boss_rect.width // 2) - ((icon_size + icon_spacing) * active_count - icon_spacing) // 2
+     icon_y = self.boss_rect.y - 80
+ 
+     # Draw each active icon
+     icon_x = start_x
+     for i in active_intentions:
+         icon = pygame.transform.scale(icon_map[i], (icon_size, icon_size))
+         self.display.blit(icon, (icon_x, icon_y))
+         icon_x += icon_size + icon_spacing
 
 
     #for players
@@ -316,20 +375,49 @@ class FirstLevel:
      full_bar_width = 100
      health_bar_height = 10
      energy_bar_height = 5
-
-     # Health bar (Red background, Green foreground)
+    
+     healthbar_bg = pygame.transform.scale(self.healthbar, (120, 14))  # Adjust if needed
+     healthbar_pos = (rect.x - 20, rect.y - 28)  # Position it slightly to the left of the player sprite
+     self.display.blit(healthbar_bg, healthbar_pos)
+ 
+     # Calculate filled health portion
      health_ratio = player.health / player.max_health
-     pygame.draw.rect(self.display, (255, 0, 0), (rect.x, rect.y - 25, full_bar_width, health_bar_height))
-     pygame.draw.rect(self.display, (0, 255, 0), (rect.x, rect.y - 25, full_bar_width * health_ratio, health_bar_height))
+     fill_width = int(102* health_ratio)  # The fillable part of the bar inside (approximate)
+     fill_height = 5
+     fill_x = healthbar_pos[0] + 16  # Start of the green fill inside the image
+     fill_y = healthbar_pos[1] + 5  # Vertically centered
 
+    # Draw the green fill bar (actual health)
+     pygame.draw.rect(self.display, (0, 255, 0), (fill_x, fill_y, fill_width, fill_height))
+     
      # Energy bar (Gray background, Blue foreground — thinner)
      energy_ratio = player.energy / player.max_energy
      pygame.draw.rect(self.display, (50, 50, 50), (rect.x, rect.y - 12, full_bar_width, energy_bar_height))
      pygame.draw.rect(self.display, (0, 0, 255), (rect.x, rect.y - 12, full_bar_width * energy_ratio, energy_bar_height))
+  
+     icon_size = 12  # Resize icon to fit nicely
+     resized_icon = pygame.transform.scale(self.energyicon, (icon_size, icon_size))
+     icon_x = rect.x - icon_size - 3  # 5 pixels gap from the bar
+     icon_y = rect.y - 12  # Align with energy bar
+     self.display.blit(resized_icon, (icon_x, icon_y))
+
 
      # Optional: Draw player name/ID above bars
      player_name = self.font.render(f"P{player.id}", True, (255, 255, 255))
      self.display.blit(player_name, (rect.x, rect.y - 45))
+     # Draw arrow if healer is selecting a target
+     
+    def get_class_icon(self, player):
+     if player.player_class == "Knight":
+        return self.KnightIcon
+     elif player.player_class == "Tank":
+        return self.TankIcon
+     elif player.player_class == "Healer":
+        return self.HealerIcon
+     elif player.player_class == "Assassin":
+         return self.AssassinIcon
+     else:
+        return pygame.Surface((100, 40))  # fallback blank surface if unknown class
 
     #draw players and health/energy bars
     def draw_players(self):
@@ -346,26 +434,35 @@ class FirstLevel:
 
         # Draw health and energy bars above the box
         self.draw_player_bars(player, rect)
+        icon = self.get_class_icon(player)
+        icon_resized = pygame.transform.scale(icon, (box_width, box_height))
+        self.display.blit(icon_resized, (x, y))
 
-        # Draw player class box
-        color = self.get_class_color(player)
-        pygame.draw.rect(self.display, color, rect)
-
-        # Draw class name
-        name_surface = self.fontsmall.render(player.player_class, True, (255, 255, 255))
-        self.display.blit(name_surface, (x + 5, y + 10))
+       
+        if self.pending_heal_card and self.healer_player is not None and self.heal_target_index == i:
+         arrow_rect = self.arrow_image.get_rect(center=(x + box_width // 2, y - 60))
+         self.display.blit(self.arrow_image, arrow_rect)
 
 
 
-    #Maybe it needs modifications {San to PlayerTurn}
+      #Maybe it needs modifications {San to PlayerTurn}
     def handle_player_turn(self, player, events):
-    # Waiting for heal target selection
+    # 1. Healing target selection mode: handle arrow keys, confirm, cancel
      if self.pending_heal_card and self.healer_player == player:
          for event in events:
-             if event.type == pygame.KEYDOWN and event.unicode.isdigit():
-                 target_index = int(event.unicode) - 1
-                 if 0 <= target_index < len(self.players):
-                     target_player = self.players[target_index]
+             if event.type == pygame.KEYDOWN:
+                 if event.key == pygame.K_a:
+                     self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+
+                 elif event.key == pygame.K_d:
+                     self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+
+                 elif event.key == pygame.K_RETURN:
+                     target_player = self.players[self.heal_target_index]
                      if target_player.is_alive():
                          self.healer_player.playCard(self.pending_heal_card, self.boss, self.players, target=target_player)
                          self.pending_heal_card = None
@@ -373,20 +470,23 @@ class FirstLevel:
                          print("Healing complete.")
                      else:
                          print("Selected player is not alive!")
-                 else:
-                     print("Invalid player index for healing.")
-         return  # Skip the rest until healing is done
- 
-     # Standard input and card selection
+
+                 elif event.key == pygame.K_ESCAPE:
+                     print("Healing cancelled.")
+                     self.pending_heal_card = None
+                     self.healer_player = None
+         return  # Skip the rest of the turn while healing target selecting
+
+     # 2. Normal card input mode
      for event in events:
          if event.type == pygame.KEYDOWN:
              if event.unicode.isdigit():
                  self.card_input += event.unicode
                  print(f"Card ID input: {self.card_input}")
- 
+
              elif event.key == pygame.K_BACKSPACE:
                  self.card_input = self.card_input[:-1]
- 
+
              elif event.key == pygame.K_RETURN:
                  if self.card_input:
                      try:
@@ -395,10 +495,11 @@ class FirstLevel:
                              selected_card = cards[card_id]
                              if player.energy >= selected_card.energy:
                                  if selected_card.heal > 0 and player.player_class == "Healer":
-                                     # Switch to heal selection mode
+                                     # Enter healing mode - set pending heal card and healer player
                                      self.pending_heal_card = selected_card
                                      self.healer_player = player
-                                     print(f"Selected healing card: {selected_card.name}. Now press the number of the player to heal.")
+                                     self.heal_target_index = 0  # reset heal target index
+                                     print(f"Selected healing card: {selected_card.name}. Use A/D to choose target, Enter to confirm.")
                                  else:
                                      player.playCard(selected_card, self.boss, self.players)
                                      print(f"Player {player.id} played card: {selected_card.name}")
@@ -410,6 +511,7 @@ class FirstLevel:
                          print("Invalid input")
                      finally:
                          self.card_input = ""
+
 
     #Checks if the turn of the player is finished to jump to the next
     def turn_finished(self, events):
@@ -443,8 +545,6 @@ class FirstLevel:
             self.gameStateManager.players = self.players
             self.gameStateManager.set_state("SecondLevel")  # You must define this
             
-        
-
       if self.defeat_screen:
          self.draw_defeat_screen()
         
@@ -506,9 +606,31 @@ class SecondLevel:
         self.victory_screen = False
         self.defeat_screen = False
         self.screen_timer = 0 
-        self.defeatscreen=pygame.image.load("defeat.jpg")
+        self.defeatscreen=pygame.image.load("defeat.png")
         self.victoryscreen=pygame.image.load("victory.jpg")
         self.phase = True
+        self.arrow_image = pygame.image.load("arrow.png").convert_alpha()
+        self.heal_target_index = 0
+        self.defeatscreen=pygame.image.load("defeat.png")
+        self.victoryscreen=pygame.image.load("victory.jpg")
+        self.arrow_image = pygame.image.load("arrow.png").convert_alpha()
+        self.healthbar=pygame.image.load("healthbar.png")
+        self.energyicon=pygame.image.load("energyicon.png")
+        self.healingicon=pygame.image.load("healingicon.png")
+      # self.armouricon=pygame.image.load("armouricon.png")
+        self.swordicon=pygame.image.load("swordicon.png")
+        self.shieldicon=pygame.image.load("shieldicon.png")
+        self.KnightIcon=pygame.image.load("Knight.png")
+        self.TankIcon=pygame.image.load("Tank.png")
+        self.HealerIcon=pygame.image.load("Healer.png")
+        self.AssassinIcon=pygame.image.load("Assasin.png")
+        self.class_icons = {
+            "Knight": self.KnightIcon,
+            "Tank": self.TankIcon,
+            "Healer": self.HealerIcon,
+            "Assassin": self.AssassinIcon
+              }
+       
         player_count = len(self.players)
         self.boss = Monster(
             name="Gorgon", 
@@ -560,41 +682,90 @@ class SecondLevel:
 
      #defeat screen
     def draw_defeat_screen(self):
-     self.display.blit(self.defeatscreen, (0, 0))   
+     self.display.fill((0,0,0))
+     self.display.blit(self.defeatscreen, (100,150))   
      
-    #for monster
+   #for monster
     def draw_health_bar(self):
-        bar_width=200
-        bar_height=20
-        health_ratio =self.boss.health/self.boss.max_health #ousiastika poso posostiaia peftei to hp
-        pygame.draw.rect(self.display,(255,0,0),(self.boss_rect.x,self.boss_rect.y-30,bar_width,bar_height))
-        pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
-        boss_name=self.font.render(self.boss.name,True,(255,255,255))
-        self.display.blit(boss_name,(self.boss_rect.x,self.boss_rect.y-55))
-        intention_text = self.font.render(f"Intentions: {self.boss.intention}", True, (255, 255, 0))
-        self.display.blit(intention_text, (self.boss_rect.x, self.boss_rect.y + 160))
+     bar_width = 200
+     bar_height = 20
+     health_ratio = self.boss.health / self.boss.max_health
+ 
+     # Health bar
+     pygame.draw.rect(self.display, (255, 0, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width, bar_height))
+     pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
+ 
+     # Boss name
+     boss_name = self.font.render(self.boss.name, True, (255, 255, 255))
+     self.display.blit(boss_name, (self.boss_rect.x, self.boss_rect.y - 55))
+ 
+     # Intention icons [attack, shield, heal]{enumerate the intentions (making a vocabulary)}
+     icon_map = {0: self.swordicon, 2: self.shieldicon, 3: self.healingicon}
+     icon_size = 40
+     icon_spacing = 5
+ 
+     # Count how many active intentions to center them
+     active_intentions = [i for i in (0, 2, 3) if i < len(self.boss.intention) and self.boss.intention[i] == 1]
+     active_count = len(active_intentions)
+     start_x = self.boss_rect.x + (self.boss_rect.width // 2) - ((icon_size + icon_spacing) * active_count - icon_spacing) // 2
+     icon_y = self.boss_rect.y - 80
+ 
+     # Draw each active icon
+     icon_x = start_x
+     for i in active_intentions:
+         icon = pygame.transform.scale(icon_map[i], (icon_size, icon_size))
+         self.display.blit(icon, (icon_x, icon_y))
+         icon_x += icon_size + icon_spacing
 
 
-
-    #for players
+     #for players
     def draw_player_bars(self, player, rect):
      full_bar_width = 100
      health_bar_height = 10
      energy_bar_height = 5
-
-     # Health bar (Red background, Green foreground)
+    
+     healthbar_bg = pygame.transform.scale(self.healthbar, (120, 14))  # Adjust if needed
+     healthbar_pos = (rect.x - 20, rect.y - 28)  # Position it slightly to the left of the player sprite
+     self.display.blit(healthbar_bg, healthbar_pos)
+ 
+     # Calculate filled health portion
      health_ratio = player.health / player.max_health
-     pygame.draw.rect(self.display, (255, 0, 0), (rect.x, rect.y - 25, full_bar_width, health_bar_height))
-     pygame.draw.rect(self.display, (0, 255, 0), (rect.x, rect.y - 25, full_bar_width * health_ratio, health_bar_height))
+     fill_width = int(102* health_ratio)  # The fillable part of the bar inside (approximate)
+     fill_height = 5
+     fill_x = healthbar_pos[0] + 16  # Start of the green fill inside the image
+     fill_y = healthbar_pos[1] + 5  # Vertically centered
 
+    # Draw the green fill bar (actual health)
+     pygame.draw.rect(self.display, (0, 255, 0), (fill_x, fill_y, fill_width, fill_height))
+     
      # Energy bar (Gray background, Blue foreground — thinner)
      energy_ratio = player.energy / player.max_energy
      pygame.draw.rect(self.display, (50, 50, 50), (rect.x, rect.y - 12, full_bar_width, energy_bar_height))
      pygame.draw.rect(self.display, (0, 0, 255), (rect.x, rect.y - 12, full_bar_width * energy_ratio, energy_bar_height))
+  
+     icon_size = 12  # Resize icon to fit nicely
+     resized_icon = pygame.transform.scale(self.energyicon, (icon_size, icon_size))
+     icon_x = rect.x - icon_size - 3  # 5 pixels gap from the bar
+     icon_y = rect.y - 12  # Align with energy bar
+     self.display.blit(resized_icon, (icon_x, icon_y))
+
 
      # Optional: Draw player name/ID above bars
      player_name = self.font.render(f"P{player.id}", True, (255, 255, 255))
      self.display.blit(player_name, (rect.x, rect.y - 45))
+     # Draw arrow if healer is selecting a target
+     
+    def get_class_icon(self, player):
+     if player.player_class == "Knight":
+        return self.KnightIcon
+     elif player.player_class == "Tank":
+        return self.TankIcon
+     elif player.player_class == "Healer":
+        return self.HealerIcon
+     elif player.player_class == "Assassin":
+         return self.AssassinIcon
+     else:
+        return pygame.Surface((100, 40))  # fallback blank surface if unknown class
 
     #draw players and health/energy bars
     def draw_players(self):
@@ -611,26 +782,34 @@ class SecondLevel:
 
         # Draw health and energy bars above the box
         self.draw_player_bars(player, rect)
+        icon = self.get_class_icon(player)
+        icon_resized = pygame.transform.scale(icon, (box_width, box_height))
+        self.display.blit(icon_resized, (x, y))
 
-        # Draw player class box
-        color = self.get_class_color(player)
-        pygame.draw.rect(self.display, color, rect)
-
-        # Draw class name
-        name_surface = self.fontsmall.render(player.player_class, True, (255, 255, 255))
-        self.display.blit(name_surface, (x + 5, y + 10))
-
+       
+        if self.pending_heal_card and self.healer_player is not None and self.heal_target_index == i:
+         arrow_rect = self.arrow_image.get_rect(center=(x + box_width // 2, y - 60))
+         self.display.blit(self.arrow_image, arrow_rect)
 
 
     #Maybe it needs modifications {San to PlayerTurn}
     def handle_player_turn(self, player, events):
-    # Waiting for heal target selection
+    # 1. Healing target selection mode: handle arrow keys, confirm, cancel
      if self.pending_heal_card and self.healer_player == player:
          for event in events:
-             if event.type == pygame.KEYDOWN and event.unicode.isdigit():
-                 target_index = int(event.unicode) - 1
-                 if 0 <= target_index < len(self.players):
-                     target_player = self.players[target_index]
+             if event.type == pygame.KEYDOWN:
+                 if event.key == pygame.K_a:
+                     self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+
+                 elif event.key == pygame.K_d:
+                     self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+
+                 elif event.key == pygame.K_RETURN:
+                     target_player = self.players[self.heal_target_index]
                      if target_player.is_alive():
                          self.healer_player.playCard(self.pending_heal_card, self.boss, self.players, target=target_player)
                          self.pending_heal_card = None
@@ -638,20 +817,23 @@ class SecondLevel:
                          print("Healing complete.")
                      else:
                          print("Selected player is not alive!")
-                 else:
-                     print("Invalid player index for healing.")
-         return  # Skip the rest until healing is done
- 
-     # Standard input and card selection
+
+                 elif event.key == pygame.K_ESCAPE:
+                     print("Healing cancelled.")
+                     self.pending_heal_card = None
+                     self.healer_player = None
+         return  # Skip the rest of the turn while healing target selecting
+
+     # 2. Normal card input mode
      for event in events:
          if event.type == pygame.KEYDOWN:
              if event.unicode.isdigit():
                  self.card_input += event.unicode
                  print(f"Card ID input: {self.card_input}")
- 
+
              elif event.key == pygame.K_BACKSPACE:
                  self.card_input = self.card_input[:-1]
- 
+
              elif event.key == pygame.K_RETURN:
                  if self.card_input:
                      try:
@@ -660,10 +842,11 @@ class SecondLevel:
                              selected_card = cards[card_id]
                              if player.energy >= selected_card.energy:
                                  if selected_card.heal > 0 and player.player_class == "Healer":
-                                     # Switch to heal selection mode
+                                     # Enter healing mode - set pending heal card and healer player
                                      self.pending_heal_card = selected_card
                                      self.healer_player = player
-                                     print(f"Selected healing card: {selected_card.name}. Now press the number of the player to heal.")
+                                     self.heal_target_index = 0  # reset heal target index
+                                     print(f"Selected healing card: {selected_card.name}. Use A/D to choose target, Enter to confirm.")
                                  else:
                                      player.playCard(selected_card, self.boss, self.players)
                                      print(f"Player {player.id} played card: {selected_card.name}")
@@ -778,9 +961,28 @@ class ThirdLevel:
         self.victory_screen = False
         self.defeat_screen = False
         self.screen_timer = 0 
-        self.defeatscreen=pygame.image.load("defeat.jpg")
+        self.defeatscreen=pygame.image.load("defeat.png")
         self.victoryscreen=pygame.image.load("victory.jpg")
         self.phase = True
+        self.arrow_image = pygame.image.load("arrow.png").convert_alpha()
+        self.heal_target_index = 0
+        self.healthbar=pygame.image.load("healthbar.png")
+        self.energyicon=pygame.image.load("energyicon.png")
+        self.healingicon=pygame.image.load("healingicon.png")
+      # self.armouricon=pygame.image.load("armouricon.png")
+        self.swordicon=pygame.image.load("swordicon.png")
+        self.shieldicon=pygame.image.load("shieldicon.png")
+        self.KnightIcon=pygame.image.load("Knight.png")
+        self.TankIcon=pygame.image.load("Tank.png")
+        self.HealerIcon=pygame.image.load("Healer.png")
+        self.AssassinIcon=pygame.image.load("Assasin.png")
+        self.class_icons = {
+            "Knight": self.KnightIcon,
+            "Tank": self.TankIcon,
+            "Healer": self.HealerIcon,
+            "Assassin": self.AssassinIcon
+              }
+       
         player_count = len(self.players)
         self.boss = Monster(
             name="Golem", 
@@ -797,16 +999,6 @@ class ThirdLevel:
         self.bossDefeated=False
         self.boss.show_intention(self.players)
 
-    def get_class_color(self, player):
-     if player.player_class == "Knight":
-        return (255, 0, 0)  # Red
-     elif player.player_class == "Tank":
-        return (0, 255, 0)  # Green
-     elif player.player_class == "Healer":
-        return (0, 0, 255)  # Blue
-     elif player.player_class == "Assassin":
-        return (255, 255, 0)  # Yellow
-     return (100, 100, 100)  # Default gray
 
      #Check;s if monster is defeated
     def check_monster_vitals(self):
@@ -815,8 +1007,6 @@ class ThirdLevel:
         self.battle_over = True
         self.victory_screen = True
         self.screen_timer = pygame.time.get_ticks()  # Start timer    
-
-
 
 
     def check_team_vitals(self):
@@ -833,41 +1023,91 @@ class ThirdLevel:
 
      #defeat screen
     def draw_defeat_screen(self):
-     self.display.blit(self.defeatscreen, (0, 0))   
+     self.display.fill((0,0,0))
+     self.display.blit(self.defeatscreen, (100,150))   
      
+
     #for monster
     def draw_health_bar(self):
-        bar_width=200
-        bar_height=20
-        health_ratio =self.boss.health/self.boss.max_health #ousiastika poso posostiaia peftei to hp
-        pygame.draw.rect(self.display,(255,0,0),(self.boss_rect.x,self.boss_rect.y-30,bar_width,bar_height))
-        pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
-        boss_name=self.font.render(self.boss.name,True,(255,255,255))
-        self.display.blit(boss_name,(self.boss_rect.x,self.boss_rect.y-55))
-        intention_text = self.font.render(f"Intentions: {self.boss.intention}", True, (255, 255, 0))
-        self.display.blit(intention_text, (self.boss_rect.x, self.boss_rect.y + 160))
+     bar_width = 200
+     bar_height = 20
+     health_ratio = self.boss.health / self.boss.max_health
+ 
+     # Health bar
+     pygame.draw.rect(self.display, (255, 0, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width, bar_height))
+     pygame.draw.rect(self.display, (0, 255, 0), (self.boss_rect.x, self.boss_rect.y - 30, bar_width * health_ratio, bar_height))
+ 
+     # Boss name
+     boss_name = self.font.render(self.boss.name, True, (255, 255, 255))
+     self.display.blit(boss_name, (self.boss_rect.x, self.boss_rect.y - 55))
+ 
+     # Intention icons [attack, shield, heal]{enumerate the intentions (making a vocabulary)}
+     icon_map = {0: self.swordicon, 2: self.shieldicon, 3: self.healingicon}
+     icon_size = 40
+     icon_spacing = 5
+ 
+     # Count how many active intentions to center them
+     active_intentions = [i for i in (0, 2, 3) if i < len(self.boss.intention) and self.boss.intention[i] == 1]
+     active_count = len(active_intentions)
+     start_x = self.boss_rect.x + (self.boss_rect.width // 2) - ((icon_size + icon_spacing) * active_count - icon_spacing) // 2
+     icon_y = self.boss_rect.y - 80
+ 
+     # Draw each active icon
+     icon_x = start_x
+     for i in active_intentions:
+         icon = pygame.transform.scale(icon_map[i], (icon_size, icon_size))
+         self.display.blit(icon, (icon_x, icon_y))
+         icon_x += icon_size + icon_spacing
 
 
-
-    #for players
+     #for players
     def draw_player_bars(self, player, rect):
      full_bar_width = 100
      health_bar_height = 10
      energy_bar_height = 5
-
-     # Health bar (Red background, Green foreground)
+    
+     healthbar_bg = pygame.transform.scale(self.healthbar, (120, 14))  # Adjust if needed
+     healthbar_pos = (rect.x - 20, rect.y - 28)  # Position it slightly to the left of the player sprite
+     self.display.blit(healthbar_bg, healthbar_pos)
+ 
+     # Calculate filled health portion
      health_ratio = player.health / player.max_health
-     pygame.draw.rect(self.display, (255, 0, 0), (rect.x, rect.y - 25, full_bar_width, health_bar_height))
-     pygame.draw.rect(self.display, (0, 255, 0), (rect.x, rect.y - 25, full_bar_width * health_ratio, health_bar_height))
+     fill_width = int(102* health_ratio)  # The fillable part of the bar inside (approximate)
+     fill_height = 5
+     fill_x = healthbar_pos[0] + 16  # Start of the green fill inside the image
+     fill_y = healthbar_pos[1] + 5  # Vertically centered
 
+    # Draw the green fill bar (actual health)
+     pygame.draw.rect(self.display, (0, 255, 0), (fill_x, fill_y, fill_width, fill_height))
+     
      # Energy bar (Gray background, Blue foreground — thinner)
      energy_ratio = player.energy / player.max_energy
      pygame.draw.rect(self.display, (50, 50, 50), (rect.x, rect.y - 12, full_bar_width, energy_bar_height))
      pygame.draw.rect(self.display, (0, 0, 255), (rect.x, rect.y - 12, full_bar_width * energy_ratio, energy_bar_height))
+  
+     icon_size = 12  # Resize icon to fit nicely
+     resized_icon = pygame.transform.scale(self.energyicon, (icon_size, icon_size))
+     icon_x = rect.x - icon_size - 3  # 5 pixels gap from the bar
+     icon_y = rect.y - 12  # Align with energy bar
+     self.display.blit(resized_icon, (icon_x, icon_y))
+
 
      # Optional: Draw player name/ID above bars
      player_name = self.font.render(f"P{player.id}", True, (255, 255, 255))
      self.display.blit(player_name, (rect.x, rect.y - 45))
+     # Draw arrow if healer is selecting a target
+     
+    def get_class_icon(self, player):
+     if player.player_class == "Knight":
+        return self.KnightIcon
+     elif player.player_class == "Tank":
+        return self.TankIcon
+     elif player.player_class == "Healer":
+        return self.HealerIcon
+     elif player.player_class == "Assassin":
+         return self.AssassinIcon
+     else:
+        return pygame.Surface((100, 40))  # fallback blank surface if unknown class
 
     #draw players and health/energy bars
     def draw_players(self):
@@ -884,26 +1124,34 @@ class ThirdLevel:
 
         # Draw health and energy bars above the box
         self.draw_player_bars(player, rect)
+        icon = self.get_class_icon(player)
+        icon_resized = pygame.transform.scale(icon, (box_width, box_height))
+        self.display.blit(icon_resized, (x, y))
 
-        # Draw player class box
-        color = self.get_class_color(player)
-        pygame.draw.rect(self.display, color, rect)
-
-        # Draw class name
-        name_surface = self.fontsmall.render(player.player_class, True, (255, 255, 255))
-        self.display.blit(name_surface, (x + 5, y + 10))
-
+       
+        if self.pending_heal_card and self.healer_player is not None and self.heal_target_index == i:
+         arrow_rect = self.arrow_image.get_rect(center=(x + box_width // 2, y - 60))
+         self.display.blit(self.arrow_image, arrow_rect)
 
 
     #Maybe it needs modifications {San to PlayerTurn}
     def handle_player_turn(self, player, events):
-    # Waiting for heal target selection
+    # 1. Healing target selection mode: handle arrow keys, confirm, cancel
      if self.pending_heal_card and self.healer_player == player:
          for event in events:
-             if event.type == pygame.KEYDOWN and event.unicode.isdigit():
-                 target_index = int(event.unicode) - 1
-                 if 0 <= target_index < len(self.players):
-                     target_player = self.players[target_index]
+             if event.type == pygame.KEYDOWN:
+                 if event.key == pygame.K_a:
+                     self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index - 1) % len(self.players)
+
+                 elif event.key == pygame.K_d:
+                     self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+                     while not self.players[self.heal_target_index].is_alive():
+                         self.heal_target_index = (self.heal_target_index + 1) % len(self.players)
+
+                 elif event.key == pygame.K_RETURN:
+                     target_player = self.players[self.heal_target_index]
                      if target_player.is_alive():
                          self.healer_player.playCard(self.pending_heal_card, self.boss, self.players, target=target_player)
                          self.pending_heal_card = None
@@ -911,20 +1159,23 @@ class ThirdLevel:
                          print("Healing complete.")
                      else:
                          print("Selected player is not alive!")
-                 else:
-                     print("Invalid player index for healing.")
-         return  # Skip the rest until healing is done
- 
-     # Standard input and card selection
+
+                 elif event.key == pygame.K_ESCAPE:
+                     print("Healing cancelled.")
+                     self.pending_heal_card = None
+                     self.healer_player = None
+         return  # Skip the rest of the turn while healing target selecting
+
+     # 2. Normal card input mode
      for event in events:
          if event.type == pygame.KEYDOWN:
              if event.unicode.isdigit():
                  self.card_input += event.unicode
                  print(f"Card ID input: {self.card_input}")
- 
+
              elif event.key == pygame.K_BACKSPACE:
                  self.card_input = self.card_input[:-1]
- 
+
              elif event.key == pygame.K_RETURN:
                  if self.card_input:
                      try:
@@ -933,10 +1184,11 @@ class ThirdLevel:
                              selected_card = cards[card_id]
                              if player.energy >= selected_card.energy:
                                  if selected_card.heal > 0 and player.player_class == "Healer":
-                                     # Switch to heal selection mode
+                                     # Enter healing mode - set pending heal card and healer player
                                      self.pending_heal_card = selected_card
                                      self.healer_player = player
-                                     print(f"Selected healing card: {selected_card.name}. Now press the number of the player to heal.")
+                                     self.heal_target_index = 0  # reset heal target index
+                                     print(f"Selected healing card: {selected_card.name}. Use A/D to choose target, Enter to confirm.")
                                  else:
                                      player.playCard(selected_card, self.boss, self.players)
                                      print(f"Player {player.id} played card: {selected_card.name}")
@@ -1030,13 +1282,6 @@ class ThirdLevel:
                     player.energy = player.max_energy  #energy reset
                     player.shield = 0                  #shield reset?Does yigioh work like that?
             pygame.display.update()                
-
-
-
-
-    
-
-
 
 
 class GameStateManager:
