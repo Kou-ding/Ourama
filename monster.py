@@ -30,15 +30,26 @@ class Monster:
             self.health = 0
     
     # Monster show intention
-    def show_intention(self, number_of_players):
+    def show_intention(self, players):
         # Generate random number from 1 to 10
-        randomizer = random.randint(1, 10)
-        player_randomizer = random.randint(1, number_of_players)
-        if self.attack_probability > randomizer:
-            print(f"{self.name} will attack Player {player_randomizer} for {self.attack} damage!")
+        
+        player_ids = []
+        for player in players:
+            if player.health > 0:
+                player_ids.append(player.id)
+
+        player_randomizer = random.randint(0, len(player_ids)-1)
+        # Get the actual player ID
+        player_index = player_ids[player_randomizer]  
+        # Generate random number from 1 to 100
+        attack_randomizer = random.randint(1, 100)
+        if self.attack_probability >= attack_randomizer:
+            print(f"{self.name} will attack Player {player_index} for {self.attack} damage!")
             self.intention[0] = 1
-            self.intention[1] = player_randomizer
-        if self.shield_probability <= randomizer:
+            self.intention[1] = player_index
+        # Generate random number from 1 to 100
+        shield_randomizer = random.randint(1, 100)
+        if self.shield_probability >= shield_randomizer:
             print(f"{self.name} will shield {self.shield} damage!")
             self.intention[2] = 1
         print(f"{self.name} will heal {self.health_regen} health!")

@@ -14,7 +14,7 @@ class Player:
         self.shield = 0
         
     
-    def setnametoid(self, name):
+    def setName(self, name):
         self.name = name
      
     def __str__(self):
@@ -35,7 +35,7 @@ class Player:
         self.max_health += max_health
         self.health = min(self.health, self.max_health)
 
-    def playCard(self, Card, Monster, players):
+    def playCard(self, Card, Monster, players, arduino, current_player_id):
         if self.energy >= Card.energy:
             self.energy -= Card.energy
             if Card.attack > 0:
@@ -56,51 +56,33 @@ class Player:
                 
                 scroll = []
                 for i in range(len(players)):
-                    scroll.append(f"{players[i].id} who is {players[i].player_class}") 
-                print("Press left and right to scroll through players.\nPress the button to select who you want to save")
+                    scroll.append(f"Heal {players[i].name}?") 
+
+                print("Press left and right to scroll through players.")
+                print("Press the button to select who you want to save")
+
                 index = 0
-                arduino = Arduino()
-                arduino.connect()
-                
+       
                 if arduino.isconnected():
-                
                     while True:
                         time.sleep(0.5)
-                        wholemsg=arduino.readmsg()
-                        msg= arduino.decode(wholemsg)
-                        
-                        print(scroll[0])
-                        if msg == "RIGHT":
+                        node, scroll_players = arduino.readMsg(current_player_id)
+                        if scroll_players == "RIGHT":
                             index = (index + 1)% len(scroll)
-                            print(scroll[index]) 
-                        elif msg == "LEFT":
+                            print(scroll[index],end='\r') 
+                        elif scroll_players == "LEFT":
                             index = (index - 1)% len(scroll)
-                            print(scroll[index])
-                        elif msg == "BTN":
-                            selected_class = scroll[index]
-                              
-                            print(f"Player {self.id} selected {selected_class}!")
+                            print(scroll[index],end='\r')
+                        elif scroll_players == "BTN":
+                            # Clear the line before printing confirmation
+                            print(" " * len(scroll[index]), end='\r')  # Clear the line
+                            print(f"Player {self.id} selected {scroll[index]}!")
+
+                            # Heal the selected player
                             self.heal(Card.heal,players[index])
                             print(f"Player {self.id} played {Card.name}!")
                             print(f"Player {self.id} healed Player {players[index].id} for {Card.heal} health!")
                             break
-                        
-                    # try:
-                    #     healRecipient = input(f"Which player are you going to heal:")
-                    #     for i, player in enumerate(players):
-                    #         print(f"{i + 1}. {player.id}")
-                    #     # Convert input to integer
-                    #     healRecipient = int(healRecipient)
-                    #     if healRecipient > 0 and healRecipient <= len(players):
-                    #         self.heal(Card.heal, players[healRecipient - 1])
-                    #         print(f"Player {self.id} played {Card.name}!")
-                    #         print(f"Player {self.id} healed Player {players[healRecipient - 1].id} for {Card.heal} health!")
-                    #         break
-                    #     else:
-                    #         print("Invalid choice. Please choose a valid player.")
-                    # except ValueError:
-                    #     print("Invalid input. Please enter a number.")
-                    #     continue
                 
             if Card.add_energy > 0:
                 self.gain_energy(Card.add_energy)

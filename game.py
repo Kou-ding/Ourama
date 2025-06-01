@@ -4,7 +4,7 @@ import time
 import sys
 from inputimeout import inputimeout, TimeoutOccurred
 from arduino import Arduino
-from card import cards
+from card import cards, Card
 from player import Player, Knight, Assassin, Healer, Tank
 from monster import Monster
 
@@ -18,13 +18,8 @@ class Game:
         self.current_card = None
         self.monsterDefeated = False
         self.arduino = Arduino()
+        self.number_of_players = 0
         
-        # Initialize the Arduino communicator#
-        
-        
-
-
-    
     def initPlayersMonsters(self):
         print("Welcome to Ourama!")
         print("How many players are there?")
@@ -33,43 +28,28 @@ class Game:
         if self.arduino.isconnected():
             print("Arduino is connected!")
             print("Waiting for players to connect...")
-            num_players = 0
             namelist = []
             print("Press the button to add a player and toggle left or right when all players are ready")
             flag = True
-            while num_players < 4 :
+            while True:
                 while flag:
-                    msg = self.arduino.readmsg()
-                    if  self.arduino.decode(msg) == "LEFT" or self.arduino.decode(msg) == "RIGHT":
-                        print(self.arduino.nametoid(msg))
+                    msg = self.arduino.readWholeMsg()
+                    if self.arduino.decode(msg) == "LEFT" or self.arduino.decode(msg) == "RIGHT":
                         if len(namelist) != 0:
-                            print(msg)
                             print("All players are ready!")
                             flag = False 
                         
-                    if  self.arduino.decode(msg) == "BTN" and self.arduino.nametoid(msg) not in namelist: 
-                        print("Button pressed! We have a new player!")
-                        num_players += 1
-                        namelist.append(self.arduino.nametoid(msg))
-                        print(f"Player {num_players} with name {self.arduino.nametoid(msg)} has joined the game!")
+                    if self.arduino.decode(msg) == "BTN" and self.arduino.nameToId(msg) not in namelist: 
+                        self.number_of_players += 1
+                        namelist.append(self.arduino.nameToId(msg))
+                        print(f"{self.arduino.nameToId(msg)} has joined the game!")
                         time.sleep(0.5)
                         continue 
                 break      
-            print("end of player selection")        
-            self.players = [None] * num_players  # Initialize players list with None
+            print("End of player selection")     
+            # Initialize players list with None   
+            self.players = [] * self.number_of_players
 
-            
-            '''
-            try:
-                num_players = int(input("Enter the number of players (1-4): "))
-                if 1 <= num_players <= 4:
-                    self.players = [None] * num_players
-                    break
-                else:
-                    print("Invalid number of players. Please enter a number between 1 and 4.")
-            except ValueError:
-                print("Invalid input. Please enter a number.")
-            '''
         print("Classes:")
         time.sleep(0.5)
         print("1. Knight")
@@ -83,121 +63,103 @@ class Game:
         
         
         if self.arduino.isconnected():
-            for i in range(num_players):
-                
+            for i in range(self.number_of_players):     
                 scroll = ["Knight  ", "Assassin", "Healer  ", "Tank    "]
                 index = 0
-                print("Selecting class for player", i+1)
+                print("Selecting class for Player", i+1)
                 time.sleep(0.5)
                 print("Press left and right to scroll through classes.\nPress the button to select your class")
                 print(scroll[0],end='\r')
-            
                 while True:
-                    time.sleep(0.5)  # Small delay to avoid overwhelming the Arduino
+                    # Small delay to avoid overwhelming the Arduino
+                    time.sleep(0.5)
+
                     # Read the message from the Arduino
-                    
-                    wholemsg=self.arduino.readmsg()
-                    msg= self.arduino.decode(wholemsg)
-                    
-                    if msg == "RIGHT":
+                    node, move = self.arduino.readMsg(i+1)
+                    flag = False
+                    # Interpret the message
+                    if move == "RIGHT":
                         index = (index + 1)% len(scroll)
                         print(scroll[index],end='\r') 
-                    elif msg == "LEFT":
+                    elif move == "LEFT":
                         index = (index - 1)% len(scroll)
                         print(scroll[index],end='\r')
-                    elif msg == "BTN":
+                    elif move == "BTN":
                         selected_class = scroll[index]
                         time.sleep(0.5)  # Small delay to avoid multiple selections
-                        print(f"Player {i+1} selected {selected_class}!")
-                        if selected_class ==   "Knight  ":
-                            self.players[i] = Knight(i+1)
+                        selected_class_temp = selected_class.strip()  # Remove any extra spaces
+                        print(f"Player {i+1} selected {selected_class_temp}!\n")
+                        if selected_class == "Knight  ":
+                            player = Knight(i+1)
+                            # Set the Arduino node name
+                            player.setName(node)
+                            self.players.append(player)
+                            flag = True
                         elif selected_class == "Assassin":
-                            self.players[i] = Assassin(i+1)
+                            player = Assassin(i+1)
+                            # Set the Arduino node name
+                            player.setName(node)
+                            self.players.append(player)
+                            flag = True
                         elif selected_class == "Healer  ":
-                            self.players[i] = Healer(i+1)
+                            player = Healer(i+1)
+                            # Set the Arduino node name
+                            player.setName(node)
+                            self.players.append(player)
+                            flag = True
                         elif selected_class == "Tank    ":
-                            self.players[i] = Tank(i+1)
-                          # Close the serial port after selection
-                        if self.players[i] is not None:
-                            print("Player initialized with class")
-                            self.players[i].setnametoid(self.arduino.nametoid(wholemsg))
-                            self.players[1] = Healer(2)
-                            self.players[2] = Tank(3)
-                            print(self.players[i].name)
-                            time.sleep(2)
-                        break
+                            player = Tank(i+1)
+                            # Set the Arduino node name
+                            player.setName(node)
+                            self.players.append(player)
+                            flag = True
 
-                                
-                        
-                                
-                                
+                        # If a player has been added, break the loop
+                        if flag == True:
+                            break
 
-                            
-
-                    
-                        
-                    
-               
-               
-                # try:
-                #     choice = input(f"Player {i+1}: Choose your class (1-4): ")
-                #     choice = int(choice)
-                #     if choice == 1:
-                #         self.players[i] = Knight(i+1)
-                #         break
-                #     elif choice == 2:
-                #         self.players[i] = Assassin(i+1)
-                #         break
-                #     elif choice == 3:
-                #         self.players[i] = Healer(i+1)
-                #         break
-                #     elif choice == 4:
-                #         self.players[i] = Tank(i+1)
-                #         break
-                #     else:
-                #         print("Invalid choice. Please choose a valid class.")
-                # except ValueError:
-                #     print("Invalid input. Please enter a number.")
-                #     continue
 
         # Initialize 3 Monsters
         self.monsters = [None] * 3
         # name, max_health, attack, shield, health_regen, current_shield, intention[will attack?, will gain shield?], Attack probability, Shield probability
         # Scale monster stats based on number of players
         self.monsters[0] = Monster(
-            name="Rekanos", 
+            name="SDOK the Charioteer",
             max_health=int(len(self.players)*5000), 
             attack=int(len(self.players)*1000/2), 
             shield=int(len(self.players)*1000/1.5), 
             health_regen=0, 
             intention=[0,0,0],
-            attack_probability=5, 
-            shield_probability=5) 
+            attack_probability=50, 
+            shield_probability=30) 
         self.monsters[1] = Monster(
-            name="Gorgon", 
+            name="Kehagias the Wise",
             max_health=int(len(self.players)*8000), 
             attack=int(len(self.players)*2000/2),
             shield=int(len(self.players)*3000/1.5), 
             health_regen=int(len(self.players)*500/1.5), 
             intention=[0,0,0], 
-            attack_probability=6, 
-            shield_probability=6) 
+            attack_probability=80, 
+            shield_probability=80) 
         self.monsters[2] = Monster(
-            name="Golem", 
+            name="Rekanos the Unhinged",
             max_health=int(len(self.players)*10000), 
             attack=int(len(self.players)*2500/2),  
             shield=int(len(self.players)*5000/1.5), 
             health_regen=int(len(self.players)*1000/1.5),  
             intention=[0,0,0], 
-            attack_probability=4, 
-            shield_probability=6)
+            attack_probability=100, 
+            shield_probability=100)
 
+        # Print the players and monsters stats
+        print("\n################ Players #################") # empty line for spacing
         # View the players and monsters stats
         for i in range(len(self.players)):
             print(self.players[i].__str__())
-
+        print("\n################ Monsters #################") # empty line for spacing
         for i in range(len(self.monsters)):
             print(self.monsters[i].__str__())
+        print("\n")
 
         print("Players and Monsters have been initialized!\n")
 
@@ -210,27 +172,26 @@ class Game:
         player.shield = 0
         
         while not self.monsterDefeated:
-            if  not self.arduino.isconnected():
+            if not self.arduino.isconnected():
                 self.arduino.connect()
                 
-            print(f"Waiting for player {player.id} with name {player.name}input...")
+            print(f"Waiting for player {player.id} with name {player.name} input...")
             
-            name = player.name
-            msg = self.arduino.clecode()
-            if msg=="BTN":
+            node, move = self.arduino.readMsg(player.id)
+
+            card_id=Card.findCard(move)
+
+            if move=="BTN":
                 print("Button pressed, ending turn.")
                 break
             
-            if msg == "LEFT" or msg == "RIGHT":
-                print('not joystick dumbfuck$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$.. Sccccannn the fking card or stop playing')  
+            if move == "LEFT" or move == "RIGHT":
+                print('Please scan a card to play.\n')  
 
-            if len(msg) > 6:
-                card_id = self.arduino.represent(msg)
-                #card_id = int(card_id)
-                print(msg)
-                self.arduino.close()
-                player.playCard(cards[card_id], self.current_monster, self.players)
+            if len(move) > 6:
+                player.playCard(cards[card_id], self.current_monster, self.players, self.arduino, player.id)
                 self.checkMonsterVitals()
+                self.arduino.close()
                 
 
     def monsterTurn(self):  
@@ -273,7 +234,7 @@ class Game:
         print(f"Round {self.current_round}")
 
         # Print the monster's intention
-        self.current_monster.show_intention(len(self.players))
+        self.current_monster.show_intention(self.players)
         
         # Players' turn
         for player in self.players:
@@ -305,7 +266,7 @@ class Game:
         print("#############################################\n") # empty line for spacing
 
     def playEncounter(self, monster):
-        print(f"You have encountered {monster.name}!")
+        print(f"You have encountered {monster.name}!\n")
         self.current_monster = monster
         print(self.current_monster.__str__())
         while True:
@@ -318,10 +279,7 @@ class Game:
 
 
     def playGame(self):
-        # Check if Arduino is connected
-        
-      
-        
+        # Initialize players and monsters
         self.initPlayersMonsters()
 
         # Experience all encounters
@@ -338,7 +296,6 @@ class Game:
 # Main function to start the game
 if __name__ == "__main__":
     # Initialize the game
-    
     Ourama = Game()
     
     # Play the game
