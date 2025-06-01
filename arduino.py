@@ -50,8 +50,6 @@ class Arduino:
 
         return node, move
     
-
-    
     def nameToId(self,btnmsg):
         btnmsg = btnmsg[:6]
         return btnmsg
