@@ -42,7 +42,7 @@ class Game:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN: #any key
                 if self.gameStateManager.get_state() == "Menu":
                     self.gameStateManager.set_state("CharacterSelect")
 
@@ -87,11 +87,11 @@ class CharacterSelect:
             pygame.quit()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
+            if event.key == pygame.K_a: #a <--- , d---> 
                 self.player_count = (self.player_count - 1) % 5
             elif event.key == pygame.K_d:
                 self.player_count = (self.player_count + 1) % 5
-            elif event.key == pygame.K_s:
+            elif event.key == pygame.K_SPACE: #s = confirm
               self.gameStateManager.set_playercount(self.player_count)
               self.gameStateManager.set_state("CharacterClass")
 
@@ -216,7 +216,8 @@ class CharacterClass:
              health_rect = health_surface.get_rect(center=(center_x, center_y + 85))
              self.display.blit(health_surface, health_rect)
 
-             # Class color bar
+             # class icon
+
              class_color = (100, 100, 100)
              if player.player_class == "Knight":
                  class_color = (255, 0, 0)
@@ -424,7 +425,7 @@ class FirstLevel:
      start_x = 50
      start_y = 500
      box_width = 100
-     box_height = 40
+     box_height = 100
      gap = 120
  
      for i, player in enumerate(self.players):
@@ -772,7 +773,7 @@ class SecondLevel:
      start_x = 50
      start_y = 500
      box_width = 100
-     box_height = 40
+     box_height = 100
      gap = 120
  
      for i, player in enumerate(self.players):
@@ -1042,18 +1043,18 @@ class ThirdLevel:
      self.display.blit(boss_name, (self.boss_rect.x, self.boss_rect.y - 55))
  
      # Intention icons [attack, shield, heal]{enumerate the intentions (making a vocabulary)}
-     icon_map = {0: self.swordicon, 2: self.shieldicon, 3: self.healingicon}
+     icon_map = {0: self.swordicon, 2: self.shieldicon, 3: self.healingicon} 
      icon_size = 40
      icon_spacing = 5
  
      # Count how many active intentions to center them
-     active_intentions = [i for i in (0, 2, 3) if i < len(self.boss.intention) and self.boss.intention[i] == 1]
+     active_intentions = [i for i in (0, 2, 3) if i < len(self.boss.intention) and self.boss.intention[i] == 1] #Unfortunately this did not work properly,there was an intent
      active_count = len(active_intentions)
      start_x = self.boss_rect.x + (self.boss_rect.width // 2) - ((icon_size + icon_spacing) * active_count - icon_spacing) // 2
      icon_y = self.boss_rect.y - 80
  
-     # Draw each active icon
-     icon_x = start_x
+     # Draw each active icon  
+     icon_x = start_x  
      for i in active_intentions:
          icon = pygame.transform.scale(icon_map[i], (icon_size, icon_size))
          self.display.blit(icon, (icon_x, icon_y))
@@ -1071,7 +1072,7 @@ class ThirdLevel:
      self.display.blit(healthbar_bg, healthbar_pos)
  
      # Calculate filled health portion
-     health_ratio = player.health / player.max_health
+     health_ratio = player.health / player.max_health #health ratio
      fill_width = int(102* health_ratio)  # The fillable part of the bar inside (approximate)
      fill_height = 5
      fill_x = healthbar_pos[0] + 16  # Start of the green fill inside the image
@@ -1088,7 +1089,7 @@ class ThirdLevel:
      icon_size = 12  # Resize icon to fit nicely
      resized_icon = pygame.transform.scale(self.energyicon, (icon_size, icon_size))
      icon_x = rect.x - icon_size - 3  # 5 pixels gap from the bar
-     icon_y = rect.y - 12  # Align with energy bar
+     icon_y = rect.y - 12  # Align with energy bar {if you increase/decrease it,it will go higher/lower}
      self.display.blit(resized_icon, (icon_x, icon_y))
 
 
@@ -1097,6 +1098,7 @@ class ThirdLevel:
      self.display.blit(player_name, (rect.x, rect.y - 45))
      # Draw arrow if healer is selecting a target
      
+      #icon getter
     def get_class_icon(self, player):
      if player.player_class == "Knight":
         return self.KnightIcon
@@ -1114,9 +1116,9 @@ class ThirdLevel:
      start_x = 50
      start_y = 500
      box_width = 100
-     box_height = 40
+     box_height = 100
      gap = 120
- 
+            #"virtual" character box that serves as a center position for the rest
      for i, player in enumerate(self.players):
         x = start_x + i * gap
         y = start_y
@@ -1128,7 +1130,7 @@ class ThirdLevel:
         icon_resized = pygame.transform.scale(icon, (box_width, box_height))
         self.display.blit(icon_resized, (x, y))
 
-       
+            
         if self.pending_heal_card and self.healer_player is not None and self.heal_target_index == i:
          arrow_rect = self.arrow_image.get_rect(center=(x + box_width // 2, y - 60))
          self.display.blit(self.arrow_image, arrow_rect)
