@@ -7,7 +7,7 @@
 #include <RF24.h>
 #include <RF24Network.h>
 
-#define PLAYER_ID 1 // Player ID for the RFID reader
+#define NODE_ID 1 // Player ID for the RFID reader
 // Declare the slave select (SS) pin (GPIO 5) for the RFID reader
 MFRC522DriverPinSimple ss_pin(5);
 
@@ -97,7 +97,7 @@ void loop() {
     char joystick_msg[32] = {0};
     bool ok = false;
     if (Xval >3700){
-      sprintf(joystick_msg, "Player %d: ", PLAYER_ID);
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
       strcat(joystick_msg, "LEFT");
       ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
       Serial.println(Xval);
@@ -111,7 +111,7 @@ void loop() {
       delay(1000);
     }
     else if (Xval < 500) { // Assuming 0-4095 range, adjust thresholds as needed
-      sprintf(joystick_msg, "Player %d: ", PLAYER_ID);
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
       strcat(joystick_msg, "RIGHT");
       ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
       Serial.println(Xval);
@@ -123,7 +123,7 @@ void loop() {
       delay(1000);
     }
     else if (Sval == LOW ){
-      sprintf(joystick_msg, "Player %d: ", PLAYER_ID);
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
       strcat(joystick_msg, "BTN");
       ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
       Serial.println(Sval);
@@ -171,7 +171,7 @@ void loop() {
   
   // Create a buffer with "player 1: " prefix
   char transmissionBuffer[25] = {0};  // Large enough for prefix + UID + null terminator
-  sprintf(transmissionBuffer, "Player %d: ", PLAYER_ID);  
+  sprintf(transmissionBuffer, "Node %d: ", NODE_ID);  
   strcat(transmissionBuffer, uidString.c_str());
 
   // Sends the combined buffer via nRF24L01
