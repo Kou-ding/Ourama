@@ -36,8 +36,8 @@ cards = [
     Card(10, "2be59348", "GAIA THE FIERCE KNIGHT", 7, 2100, 0, 0, 0, 0),
 
     # DEF Cards
-    Card(11, "3bdf8b48", "RED-EYES BLACK DRAGON", 7, 0, 2400, 0, 0, 0),
-    Card(12, "3b4f8c48", "BIG SHIELD GARDNA", 4, 0, 2600, 0, 0, 0),
+    Card(11, "3b7a9648", "RED-EYES BLACK DRAGON", 7, 0, 2400, 0, 0, 0),
+    Card(12, "3bdf8b48", "BIG SHIELD GARDNA", 4, 0, 2600, 0, 0, 0),
     Card(13, "", "DESTINY HERO - DEFENDER", 4, 0, 2700, 0, 0, 0),
     Card(14, "", "STONE STATUE OF THE AZTECS", 4, 0, 2000, 0, 0, 0),
     Card(15, "", "BLAST SPHERE", 4, 0, 1400, 0, 0, 0),
@@ -67,4 +67,5 @@ cards = [
     Card(32, "", "GRACEFUL CHARITY", 0, 0, 0, 0, 7, 0),
     Card(33, "", "GRACEFUL DICE", 0, 0, 0, 0, 5, 0),
     Card(34, "d66c0e05", "POT OF GREED", 0, 0, 0, 0, 20, 0),
+    Card(35, "", "EXODIA THE FORBIDDEN ONE", 0, 1000000, 0, 0, 0, 0)
 ]
