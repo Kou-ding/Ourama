@@ -5,8 +5,9 @@
 #include <MFRC522Debug.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
 
-#define PLAYER_ID 2 // Player ID for the RFID reader
+#define NODE_ID 1 // Player ID for the RFID reader
 // Declare the slave select (SS) pin (GPIO 5) for the RFID reader
 MFRC522DriverPinSimple ss_pin(5);
 
@@ -21,17 +22,31 @@ SPIClass * hspi = new SPIClass(HSPI);
 #define CE_PIN   4
 #define CSN_PIN 15
 
+// create joystick 
+int Xpin = 34;
+int Ypin = 35;
+int Spin = 33;
+int Xval;
+int Yval;
+int Sval;
+
 // Creates a radio object using defined control pins
-RF24 radio(CE_PIN, CSN_PIN);  // CE, CSN
+RF24 radio(CE_PIN, CSN_PIN);     // CE, CSN
+RF24Network network(radio);      // Include the radio in the network
+const uint16_t this_node = 01;   // Address of this node in Octal format
+const uint16_t node00 = 00;      // Address of the destination node      
 
 // Defines a pipe address (5 characters + null terminator) for nRF24L01 communication
-const byte address[6]="00001";
+//const byte address[6]="00001";
 
 void setup() {
   // Starts serial communication and waits until it's ready.
   Serial.begin(9600);
   while(!Serial);
 
+  pinMode(Xpin,INPUT);
+  pinMode(Ypin,INPUT);
+  pinMode(Spin,INPUT_PULLUP);
   // Initializes the RFID reader and prints its firmware version
   mfrc522.PCD_Init();
   MFRC522Debug::PCD_DumpVersionToSerial(mfrc522, Serial);
@@ -48,28 +63,83 @@ void setup() {
     Serial.println("nRF24L01 not responding!");
     while (1);
   }
-
+  
+  // Establish communication with the network
+  network.begin(108, this_node);  //(channel, node address)
+  
   // Configures the nRF24L01
   // Writing pipe
-  radio.openWritingPipe(address);
+  //radio.openWritingPipe(address);
   // Power level: Minimum
   radio.setPALevel(RF24_PA_MIN);
   // Data rate: 1 Mbps
   radio.setDataRate(RF24_250KBPS);
   // Channel 108
-  radio.setChannel(108);
+  //radio.setChannel(108);
   // Disable the radio auto-acknowledgment
   radio.setAutoAck(true);
   radio.enableDynamicPayloads();
   // Retries 5 times, 15 delay units
   radio.setRetries(5, 15);
   // Sets the module to transmit mode
-  radio.stopListening(); 
+  //radio.stopListening(); 
 }
 
 void loop() {
+
+  network.update();
+  RF24NetworkHeader header(node00); 
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
 	if (!mfrc522.PICC_IsNewCardPresent()) {
+    Xval = analogRead(Xpin);
+    Yval = analogRead(Ypin);
+    Sval = digitalRead(Spin);
+    char joystick_msg[32] = {0};
+    bool ok = false;
+    if (Xval >3700){
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
+      strcat(joystick_msg, "LEFT");
+      ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
+      Serial.println(Xval);
+
+      if (ok){
+        
+      Serial.print("Joystick message sent: ");
+      Serial.println(joystick_msg);
+      }
+
+      delay(1000);
+    }
+    else if (Xval < 500) { // Assuming 0-4095 range, adjust thresholds as needed
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
+      strcat(joystick_msg, "RIGHT");
+      ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
+      Serial.println(Xval);
+
+      if (ok){
+      Serial.print("Joystick message sent: ");
+      Serial.println(joystick_msg);
+      }
+      delay(1000);
+    }
+    else if (Sval == LOW ){
+      sprintf(joystick_msg, "Node %d: ", NODE_ID);
+      strcat(joystick_msg, "BTN");
+      ok = network.write(header,joystick_msg,strlen(joystick_msg)+1);
+      Serial.println(Sval);
+
+      if (ok){
+      Serial.print("Joystick message sent: ");
+      Serial.println(joystick_msg);
+      }
+
+      delay(1000);
+    }
+    //if (ok){
+    //  Serial.print("Joystick message sent: ");
+    //  Serial.println(joystick_msg);
+    //}
+    delay(50);
 		return;
 	}
 
@@ -101,11 +171,11 @@ void loop() {
   
   // Create a buffer with "player 1: " prefix
   char transmissionBuffer[25] = {0};  // Large enough for prefix + UID + null terminator
-  sprintf(transmissionBuffer, "Player %d: ", PLAYER_ID);  
+  sprintf(transmissionBuffer, "Node %d: ", NODE_ID);  
   strcat(transmissionBuffer, uidString.c_str());
 
   // Sends the combined buffer via nRF24L01
-  bool success = radio.write(&transmissionBuffer, sizeof(transmissionBuffer));
+  bool success = network.write(header,&transmissionBuffer, sizeof(transmissionBuffer));
 
   // Prints success or failure message.
   if (success) {
