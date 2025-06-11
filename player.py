@@ -105,7 +105,7 @@ class Knight(Player):
 
 class Assassin(Player):
     def __init__(self, id):
-        super().__init__(id, player_class="Assassin", max_health=6000, max_energy=10)
+        super().__init__(id, player_class="Assassin", max_health=6000, max_energy=14)
 
 class Healer(Player):
     def __init__(self, id):
